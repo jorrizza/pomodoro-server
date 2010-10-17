@@ -1,0 +1,9 @@
+---
+# The place where the Apache config files end up
+config_path: /home/jorrizza/src/pomodoro-server/apache
+
+# Where all the website data is stored
+server_path: /home/jorrizza/src/pomodoro-server/www
+
+# Your email address
+email_address: info@pomodoro.nl

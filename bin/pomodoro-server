@@ -1,0 +1,103 @@
+#!/usr/bin/env ruby1.9.1
+
+require 'psych'
+require 'liquid'
+
+class PomodoroServer
+  # Re-reads the config files and re-generates the apache config directory
+  def self.configure
+    # Locate the main config file
+    config_file = File.join(Dir.home, 'conf', 'main.yml')
+    config_file = File.join(ARGV[0], 'main.yml') if ARGV[0]
+    raise "Can't read main.yml config file" unless File.readable? config_file
+
+    # Parse the main config file
+    begin
+      config = {
+        'config_path' => nil,
+        'server_path' => nil,
+        'email_address' => nil,
+        'domain' => nil,
+        'enabled' => nil
+      }.merge Psych.load(open(config_file))
+    rescue Psych::SyntaxError
+      raise "#{config_file} couldn't be parsed"
+    end
+
+    # Parse the config template
+    config_template_file = File.join(File.dirname(config_file), 'site.liquid')
+    begin
+      config_template = Liquid::Template.parse(open(config_template_file).read)
+    rescue
+      raise "#{config_template_file} couldn't be parsed"
+    end
+
+    # Cleanup the Apache config directory
+    begin
+      Dir.open(config['config_path']).each do |f|
+        file = File.join(config['config_path'], f)
+        File.unlink file if File.file? file
+      end
+    rescue
+      raise "#{config['config_path']} can't be accessed"
+    end
+
+    # Parse each site config file...
+    sites_dir = File.join(File.dirname(config_file), 'sites')
+    Dir.open(sites_dir).each do |site_config_file|
+      if site_config_file.end_with? '.yml'
+        site_config_file = File.join(sites_dir, site_config_file)
+        begin
+          site_config = Psych.load(open(site_config_file))
+          if site_config.is_a? Hash
+            site_config = config.merge site_config
+          else
+            raise Psych::SyntaxError
+          end
+        rescue Psych::SyntaxError
+          raise "#{site_config_file} couldn't be parsed"
+        end
+
+        site_config.each_pair do |config_key, config_value|
+          raise "Parameter '#{config_key}' is not set after parsing #{site_config_file}" if config_value.nil?
+        end
+
+        # Check if the data dir exists
+        site_server_path = File.join(site_config['server_path'], site_config['domain'])
+        raise "Server path #{site_server_path} does not exist" unless File.directory? site_server_path
+
+        # And add the apache config if the site's enabled.
+        if site_config['enabled']
+          apache_config = config_template.render site_config
+
+          File.open(File.join(site_config['config_path'], site_config['domain']), 'w+') do |f|
+            f.puts apache_config
+          end
+        end
+      end
+    end
+  end
+
+  # Reloads Apache through `sudo apache2ctl`
+  def self.apply
+    if system 'sudo -n apache2ctl configtest &> /dev/null'
+      system 'sudo -n apache2ctl graceful &> /dev/null'
+    else
+      false
+    end
+  end
+end
+
+begin
+  PomodoroServer.configure
+rescue
+  $stderr.puts "Error configuring server: #{$!}."
+else
+  puts "Apache reconfigured."
+  if PomodoroServer.apply
+    puts "Apache reloaded."
+  else
+    $stderr.puts "Could not reload Apache. I fcked up. I'm really sorry."
+  end
+end
+
