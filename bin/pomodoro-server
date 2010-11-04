@@ -18,6 +18,7 @@ class PomodoroServer
         'server_path' => nil,
         'email_address' => nil,
         'domain' => nil,
+        'subdomains' => nil,
         'enabled' => nil
       }.merge Psych.load(open(config_file))
     rescue Psych::SyntaxError
