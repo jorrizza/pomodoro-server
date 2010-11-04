@@ -1,0 +1,9 @@
+---
+# The site's domain.
+domain: subdomain.test.nl
+
+# It's true or false. If false, the site will be disabled.
+enabled: true
+
+# We've got no subdomains, because it is a subdomain.
+subdomains: []

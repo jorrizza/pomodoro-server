@@ -7,3 +7,8 @@ server_path: /home/jorrizza/src/pomodoro-server/www
 
 # Your email address
 email_address: info@pomodoro.nl
+
+# Default subdomain aliases for all domains, unless
+# redefined by the site config
+subdomains:
+  - www
