@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# Git Hook
+# Updates the working copy and reconfigure the server.
+#
+
+git-update-server-info
+
+echo "Running checkout..."
+# One of the very many Git WTF's
+git-diff-index -R --name-status HEAD
+git-reset --hard HEAD
+
+echo "Running config engine..."
+exec pomodoro-server
