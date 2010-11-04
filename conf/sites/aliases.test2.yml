@@ -1,0 +1,11 @@
+---
+# The site's domain.
+domain: test2.nl
+
+# It's true or false. If false, the site will be disabled.
+enabled: true
+
+# We've got a few aliases
+aliases:
+  - test2.com
+  - test2.net

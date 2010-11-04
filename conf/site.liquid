@@ -1,8 +1,16 @@
 <VirtualHost *:80>
   ServerAdmin {{email_address}}
   ServerName {{domain}}
+
   {% for sub in subdomains %}
     ServerAlias {{sub}}.{{domain}}
+  {% endfor %}
+
+  {% for alias in aliases %}
+    ServerAlias {{alias}}
+    {% for sub in subdomains %}
+      ServerAlias {{sub}}.{{alias}}
+    {% endfor %}
   {% endfor %}
 
   DocumentRoot {{server_path}}/{{domain}}/
