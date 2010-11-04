@@ -6,10 +6,9 @@
 
 git-update-server-info
 
-echo "Running checkout..."
+echo "Running pull in $HOME/conf..."
 # One of the very many Git WTF's
-git-diff-index -R --name-status HEAD
-git-reset --hard HEAD
+cd $HOME/conf && env -i git pull
 
 echo "Running config engine..."
-exec pomodoro-server
+pomodoro-server
